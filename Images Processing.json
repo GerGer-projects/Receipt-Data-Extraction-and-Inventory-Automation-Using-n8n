@@ -1,0 +1,318 @@
+{
+  "name": "Images Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"message\": \"\",\n  \"id\":\"\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e6694613-3974-4d52-b571-85cea7f2f8ef",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "1281c5da-ec4e-47d9-96ef-592305269ac6",
+      "name": "Get a file",
+      "webhookId": "cb816a82-d34e-4c05-8be0-271fa6470ee3",
+      "credentials": {
+        "telegramApi": {
+          "id": "861qB5dsQ3nRy5I0",
+          "name": "Biomate Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an expert in extraction algorithm parsing OCR text from a scanned receipt. \nThe OCR text may contain line breaks, irregular spacing, or misaligned columns. \nYour task is to reconstruct a clean table of line items.\n\nGuidelines for interpreting the OCR text:\n- Products details such as name, quantity, price, barcode, and total price span 2 lines → merge them into one field.\n- The smallest numeric value is usually the Quantity.\n- The longest numeric string (often >10 digits) is the Barcode/SKU.\n- The middle numeric value is the Unit Price.\n- The rightmost value is usually the Total (Quantity × Unit Price).\n- If a field is missing or unreadable, replace it with [CHECK].\n\nReconstruct the table with the following headers:\nQuantity | Barcode | Product Name | Unit Price | Total\n\nReturn the result as a Markdown table. Do not add extra commentary.",
+              "role": "system"
+            },
+            {
+              "content": "=Here is the image you need to pull data from {{ $('Get a file').item.json.result.file_id }}"
+            },
+            {
+              "content": "=I want you to output this data as JSON file in the following format. Follow this exact format\n[\n  {\n    \"Barcode\": \"48032742\",\n    \"ProductName\": \"JOHNSONS BPOW BLOSSOMS P 25G0000\",\n    \"Quantity\": \"12.00\",\n    \"UnitPrice\": \"18.75\",\n    \"Total\": \"225.00\"\n  },\n  {\n    \"Barcode\": \"8850000480731\",\n    \"ProductName\": \"PALMOLIVE SH NOURISHED & LONG TSMLX12S\",\n    \"Quantity\": \"4.00\",\n    \"UnitPrice\": \"68.25\",\n    \"Total\": \"274.00\"\n  },\n  {\n    \"Barcode\": \"4987176040480\",\n    \"ProductName\": \"H&S SH ANTIBAC\",\n    \"Quantity\": \"3.00\",\n    \"UnitPrice\": \"91.50\",\n    \"Total\": \"274.50\"\n  },\n  {\n    \"Barcode\": \"4902430671804\",\n    \"ProductName\": \"H&S SH COOL MENTHOL 12ML 115+1\",\n    \"Quantity\": \"3.00\",\n    \"UnitPrice\": \"75.25\",\n    \"Total\": \"225.75\"\n  },\n  {\n    \"Barcode\": \"4800888194268\",\n    \"ProductName\": \"SUNSILK SH STRONG & LONG 115+15\",\n    \"Quantity\": \"3.00\",\n    \"UnitPrice\": \"65.75\",\n    \"Total\": \"197.25\"\n  }\n]\n\n",
+              "role": "assistant"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        576,
+        0
+      ],
+      "id": "6ff15aed-c301-488d-b3fc-bbc522588773",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "JMU0GnTLiQsTWnkU",
+          "name": "dog789"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "message.content.items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        0
+      ],
+      "id": "1d8e1ce4-c356-4df1-8de3-7fee1def2d86",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1SxsO937Nk2N3xI22xZxv7dl3G9f6gSp8MU78sBi4TVw",
+          "mode": "list",
+          "cachedResultName": "Biomate Inventory n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SxsO937Nk2N3xI22xZxv7dl3G9f6gSp8MU78sBi4TVw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SxsO937Nk2N3xI22xZxv7dl3G9f6gSp8MU78sBi4TVw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Barcode": "={{ $json.Barcode }}",
+            "ProductName": "={{ $json.ProductName }}",
+            "Quantity": "={{ $json.Quantity }}",
+            "UnitPrice": "={{ $json.UnitPrice }}",
+            "Total": "={{ $json.Total }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Barcode",
+              "displayName": "Barcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ProductName",
+              "displayName": "ProductName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UnitPrice",
+              "displayName": "UnitPrice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1088,
+        0
+      ],
+      "id": "71065550-32db-4b59-a8cd-70cc3b2ec203",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "OQ3TaY5ovWiKYldF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Extract all text on this image, try to follow the same format within the picture",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        384,
+        0
+      ],
+      "id": "b6d7af2e-2d39-44f9-8fbf-f0c1e96d66e2",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "JMU0GnTLiQsTWnkU",
+          "name": "dog789"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "**Image Processing**",
+        "height": 224,
+        "width": 1296,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -48
+      ],
+      "id": "2c10c6de-8838-4bce-93c8-2a4bba16c301",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "message": "process this PDF",
+          "id": "BQACAgUAAxkBAANNaN9CCyYbUt2SUlKeVUCWoYBjtWwAApcaAAJ1LfhW4yrPD5mKvs02BA"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "92a2ac14-98ba-4d9e-9fc5-3c1464cbf1dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c8f1d517890d3d7fddb17ab666c835e90249eef5ea4f5af48d6f09775300b4a3"
+  },
+  "id": "3Z2PTUWe1pPIVrwT",
+  "tags": []
+}

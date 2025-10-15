@@ -1,0 +1,269 @@
+{
+  "name": "PDF Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"message\": \"\",\n  \"id\":\"\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e7447912-434c-41ba-bd24-1cb99a9ef7af",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "e32ce48c-311f-427d-8f03-6eedd6ba5bb0",
+      "name": "Get a file",
+      "webhookId": "cb816a82-d34e-4c05-8be0-271fa6470ee3",
+      "credentials": {
+        "telegramApi": {
+          "id": "861qB5dsQ3nRy5I0",
+          "name": "Biomate Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an expert in extraction algorithm parsing OCR text from a scanned receipt. \nThe OCR text may contain line breaks, irregular spacing, or misaligned columns. \nYour task is to reconstruct a clean table of line items.\n\nGuidelines for interpreting the OCR text:\n- Products details such as name, quantity, price, barcode, and total price span 2 lines → merge them into one field.\n- The smallest numeric value is usually the Quantity.\n- The longest numeric string (often >10 digits) is the Barcode/SKU.\n- The middle numeric value is the Unit Price.\n- The rightmost value is usually the Total (Quantity × Unit Price).\n- If a field is missing or unreadable, replace it with [CHECK].\n\nReconstruct the table with the following headers:\nQuantity | Barcode | Product Name | Unit Price | Total\n\nReturn the result as a Markdown table. Do not add extra commentary.",
+              "role": "system"
+            },
+            {
+              "content": "=Here is the document you need to pull data from {{ $('Get a file').item.json.result.file_id }}"
+            },
+            {
+              "content": "=I want you to output this data as JSON data in the following format\n[\n  {\n    \"Barcode\": \"\",\n    \"ProductName\": \"\",\n    \"Quantity\": \"\",\n    \"UnitPrice\": \"\",\n    \"Total\": \"\"\n  },\n  {\n    \"Barcode\": \"\",\n    \"ProductName\": \"\",\n    \"Quantity\": \"\",\n    \"UnitPrice\": \"\",\n    \"Total\": \"\"\n  },...\n]\n\n",
+              "role": "assistant"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        432,
+        0
+      ],
+      "id": "cdf45851-6a7e-4e60-8fd2-14e7e8020ceb",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "JMU0GnTLiQsTWnkU",
+          "name": "dog789"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "message.content.items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        816,
+        0
+      ],
+      "id": "edca5c67-14f2-4f63-bbe4-f3efc1228fdb",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1SxsO937Nk2N3xI22xZxv7dl3G9f6gSp8MU78sBi4TVw",
+          "mode": "list",
+          "cachedResultName": "Biomate Inventory n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SxsO937Nk2N3xI22xZxv7dl3G9f6gSp8MU78sBi4TVw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SxsO937Nk2N3xI22xZxv7dl3G9f6gSp8MU78sBi4TVw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Barcode": "={{ $json.Barcode }}",
+            "ProductName": "={{ $json.ProductName }}",
+            "Quantity": "={{ $json.Quantity }}",
+            "UnitPrice": "={{ $json.UnitPrice }}",
+            "Total": "={{ $json.Total }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Barcode",
+              "displayName": "Barcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ProductName",
+              "displayName": "ProductName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UnitPrice",
+              "displayName": "UnitPrice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "aee176dc-212b-453a-9d7e-597fbde282f4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "OQ3TaY5ovWiKYldF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "**PDF Processing**",
+        "height": 224,
+        "width": 1280,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "a8156518-8370-43f4-b818-0cd67a547e8b",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "08efcfef-8a9c-4a86-813f-e1b6a056bca2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c8f1d517890d3d7fddb17ab666c835e90249eef5ea4f5af48d6f09775300b4a3"
+  },
+  "id": "lTldGGgSNSR0Gkte",
+  "tags": []
+}
